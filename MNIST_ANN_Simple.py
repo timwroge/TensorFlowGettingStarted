@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import datetime as dt
-import math
+
 
 K=320
 L=110
@@ -18,19 +18,13 @@ x = tf.placeholder(tf.float32, [None, 784], name="X")
 #adding layers
 
 with tf.name_scope("Weights"):
-    W1= tf.Variable(tf.truncated_normal([784, K], stddev=norm_dist_elu(784,K)), name="W1")
+    W1= tf.Variable(tf.truncated_normal([784, K], stddev=.1), name="W1")
     tf.summary.histogram("Weights_1", W1)
     
-    W2= tf.Variable(tf.truncated_normal([K, L],stddev=norm_dist_elu(K, L)), name = "W2")
+    W2= tf.Variable(tf.truncated_normal([K, L],.1), name = "W2")
     tf.summary.histogram("Weights_2", W2)
-
-    W3= tf.Variable(tf.truncated_normal([L, M],stddev=norm_dist_elu(L,M)),name = "W3")
-    tf.summary.histogram("Weights_3", W3)
-
-##    W4= tf.Variable(tf.truncated_normal([M, N],stddev=norm_dist_elu(M,N)),name = "W4")
-##    tf.summary.histogram("Weights_4", W4)
-
-    W_out= tf.Variable(tf.truncated_normal([M, 10],stddev=norm_dist_elu(M, 10)),name = "W_out")
+    
+    W_out= tf.Variable(tf.truncated_normal([L, 10],stddev=.1),name = "W_out")
     tf.summary.histogram("Weights_Out", W_out)
 
 with tf.name_scope("Biases"):
@@ -39,13 +33,7 @@ with tf.name_scope("Biases"):
 
     b2 = tf.Variable(tf.zeros([L]),name = "b2")
     tf.summary.histogram("Biases_2", b2)
-
-    b3 = tf.Variable(tf.zeros([M]),name = "b3")
-    tf.summary.histogram("Biases_3", b1)
-
-##    b4 = tf.Variable(tf.zeros([N]),name = "b4")
-##    tf.summary.histogram("Biases_4", b4)
-    
+ 
     b_out= tf.Variable(tf.zeros([10]),name = "b_out")
     tf.summary.histogram("Biases_Out", b_out)
 
@@ -55,9 +43,8 @@ with tf.name_scope("MultiLayer_NN"):
  #implementing multilayer nn
  y1 = tf.nn.elu(tf.matmul(x, W1) + b1 , name = "y1")
  y2 = tf.nn.elu(tf.matmul(y1, W2) + b2,name =  "y2")
- y3 = tf.nn.elu(tf.matmul(y2, W3) + b3,name = "y3")
-## y4 = tf.nn.elu(tf.matmul(y3, W4) + b4,name = "y4")
- Output= tf.nn.softmax(tf.matmul(y3, W_out) + b_out, name = "Output")
+
+ Output= tf.nn.softmax(tf.matmul(y2, W_out) + b_out, name = "Output")
 
 #begin defining the cost
 
@@ -75,18 +62,17 @@ with tf.Session() as sess:
     epochs = 10000
     
     now = dt.datetime.utcnow().strftime("%B.%d.%y@%H.%M.%S.%f")
-    filewrite_out=tf.summary.FileWriter("/tmp/MNIST_MultiLayer_ANN/{}".format(now))
+    filewrite_out=tf.summary.FileWriter("/tmp/MNIST_ANN_Simple/{}".format(now))
     filewrite_out.add_graph(sess.graph)
               
     tf.summary.scalar("Cost", cross_entropy)
-    tf.summary.histogram("Cost", cross_entropy)
+   
     
     correct_prediction = tf.equal(tf.argmax(Output, 1), tf.argmax(Output_labels, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     tf.summary.scalar("Accuracy", accuracy)
-    tf.summary.histogram("Accuracy", accuracy)
-
+  
     merged_summaries=tf.summary.merge_all()
 
     with tf.name_scope("Training"):
